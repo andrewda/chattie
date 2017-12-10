@@ -34,8 +34,6 @@ function getChatType(url) {
     type = CHAT['TELEGRAM'];
   } else if (hostname.indexOf('slack') > -1 || pathname.indexOf('slack') > -1) {
     type = CHAT['SLACK'];
-  } else if (hostname.indexOf('freenode') > -1) {
-    type = CHAT['IRC'];
   }
 
   return type;
@@ -43,7 +41,8 @@ function getChatType(url) {
 
 async function fetchChatLink(url) {
   const patterns = {
-    'irc': /(?:irc:\/\/)(?:[a-zA-Z1-9]+)?\.?freenode\.net\/?([a-zA-Z1-9-]+)?/,
+    'irc': /(?:irc:\/\/)(?:[a-zA-Z1-9]+)?\.?freenode\.net\/(#?[a-zA-Z1-9-]+)/,
+    'ircweb': /(?:https?:\/\/)webchat\.freenode\.net\/\?channels=%23([a-zA-Z1-9-]+)/,
     'zulip': /(?:https?:\/\/)chat\.zulip\.org/,
     'rocket': /RocketChat/,
     'web': /(?:https?:\/\/)(?:[a-zA-Z1-9]+)?\.?(gitter|zulip(?:chat)?)\.(?:[a-zA-Z1-9]{1,5})\/?([a-zA-Z1-9-]+)?/
@@ -63,6 +62,11 @@ async function fetchChatLink(url) {
     const ircMatches = patterns.irc.exec(response.body);
     if (ircMatches) {
       return { type: CHAT['IRC'], url: ircMatches[0] };
+    }
+
+    const ircwebMatches = patterns.ircweb.exec(response.request.href);
+    if (ircwebMatches) {
+      return { type: CHAT['IRC'], url: `irc://irc.freenode.net/${ircwebMatches[1]}` };
     }
 
     const zulipMatches = patterns.zulip.exec(response.body);
