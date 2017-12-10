@@ -1,6 +1,6 @@
 {
   "name": "chattie",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A module to help find chat servers from URLs",
   "main": "index.js",
   "repository": "https://github.com/andrewda/chattie",
