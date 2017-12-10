@@ -1,0 +1,13 @@
+{
+  "name": "chattie",
+  "version": "0.0.3",
+  "description": "A module to help find chat servers from URLs",
+  "main": "index.js",
+  "repository": "https://github.com/andrewda/chattie",
+  "author": "Andrew Dassonville <dassonville.andrew@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "request": "^2.83.0",
+    "request-promise": "^4.2.2"
+  }
+}
