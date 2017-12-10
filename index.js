@@ -45,6 +45,7 @@ async function fetchChatLink(url) {
   const patterns = {
     'irc': /(?:irc:\/\/)(?:[a-zA-Z1-9]+)?\.?freenode\.net\/?([a-zA-Z1-9-]+)?/,
     'zulip': /(?:https?:\/\/)chat\.zulip\.org/,
+    'rocket': /RocketChat/,
     'web': /(?:https?:\/\/)(?:[a-zA-Z1-9]+)?\.?(gitter|zulip(?:chat)?)\.(?:[a-zA-Z1-9]{1,5})\/?([a-zA-Z1-9-]+)?/
   };
 
@@ -52,28 +53,38 @@ async function fetchChatLink(url) {
   const pathname = parsedUrl.pathname.toLowerCase();
 
   try {
-    const response = await rp(url);
+    const options = {
+      uri: url,
+      resolveWithFullResponse: true,
+    };
 
-    const ircMatches = patterns.irc.exec(response);
+    const response = await rp(options);
+
+    const ircMatches = patterns.irc.exec(response.body);
     if (ircMatches) {
       return { type: CHAT['IRC'], url: ircMatches[0] };
     }
 
-    const zulipMatches = patterns.zulip.exec(response);
+    const zulipMatches = patterns.zulip.exec(response.body);
     if (zulipMatches) {
       return { type: CHAT['ZULIP'], url: zulipMatches[0] };
     }
 
-    const webMatches = patterns.web.exec(url);
+    const rocketMatches = patterns.rocket.exec(response.body);
+    if (rocketMatches) {
+      return { type: CHAT['ROCKET'], url: response.request.href };
+    }
+
+    const webMatches = patterns.web.exec(response.request.href);
     if (webMatches) {
       return { type: CHAT[webMatches[1].toUpperCase()], url: webMatches[0] };
     }
 
     if (pathname.indexOf('irc') > -1) {
-      return { type: CHAT['IRC'], url };
+      return { type: CHAT['IRC'], url: response.request.href };
     }
 
-    return { type: CHAT['OTHER'], url };
+    return { type: CHAT['OTHER'], url: response.request.href };
   } catch (e) {
     return { type: CHAT['OTHER'], url };
   }
