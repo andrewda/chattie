@@ -1,6 +1,7 @@
-const parse = require('url').parse;
-const rp = require('request-promise');
-const CHAT = require('./resources/chat-types');
+const parse  = require('url').parse;
+const rp     = require('request-promise');
+const CHAT   = require('./resources/chat-types');
+const cherio = require('cherio');
 
 async function chattie(url) {
   if (!url) return { type: null, url: null };
@@ -45,7 +46,8 @@ async function fetchChatLink(url) {
     'ircweb': /(?:https?:\/\/)webchat\.freenode\.net\/\?channels=%23([a-zA-Z1-9-]+)/,
     'zulip': /(?:https?:\/\/)chat\.zulip\.org/,
     'rocket': /RocketChat/,
-    'web': /(?:https?:\/\/)(?:[a-zA-Z1-9]+)?\.?(gitter|zulip(?:chat)?)\.(?:[a-zA-Z1-9]{1,5})\/?([a-zA-Z1-9-]+)?/
+    'web': /(?:https?:\/\/)(?:[a-zA-Z1-9]+)?\.?(gitter|zulip(?:chat)?)\.(?:[a-zA-Z1-9]{1,5})\/?([a-zA-Z1-9-]+)?/,
+    'discourse': /Discourse\s\d\.\d.+?$/,
   };
 
   const parsedUrl = parse(url);
@@ -57,7 +59,9 @@ async function fetchChatLink(url) {
       resolveWithFullResponse: true,
     };
 
-    const response = await rp(options);
+    const response  = await rp(options);
+    const $body     = cherio.load(response.body);
+    const generator = $body('meta[name=generator]').attr('content');
 
     const ircMatches = patterns.irc.exec(response.body);
     if (ircMatches) {
@@ -86,6 +90,10 @@ async function fetchChatLink(url) {
 
     if (pathname.indexOf('irc') > -1) {
       return { type: CHAT['IRC'], url: response.request.href };
+    }
+
+    if(patterns.discourse.exec(generator)) {
+      return { type: CHAT['DISCOURSE'], url: response.request.href };
     }
 
     return { type: CHAT['OTHER'], url: response.request.href };

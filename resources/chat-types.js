@@ -7,6 +7,7 @@ module.exports = {
   'ROCKET': 4,
   'TELEGRAM': 5,
   'IRC': 6,
+  'DISCOURSE': 7,
 
   0: 'OTHER',
   1: 'GITTER',
@@ -15,4 +16,5 @@ module.exports = {
   4: 'ROCKET',
   5: 'TELEGRAM',
   6: 'IRC',
+  7: 'DISCOURSE',
 };
