@@ -1,7 +1,7 @@
 const parse  = require('url').parse;
-const rp     = require('request-promise');
-const CHAT   = require('./resources/chat-types');
-const cherio = require('cherio');
+const rp = require('request-promise');
+const cheerio = require('cheerio');
+const CHAT = require('./resources/chat-types');
 
 async function chattie(url) {
   if (!url) return { type: null, url: null };
@@ -59,8 +59,8 @@ async function fetchChatLink(url) {
       resolveWithFullResponse: true,
     };
 
-    const response  = await rp(options);
-    const $body     = cherio.load(response.body);
+    const response = await rp(options);
+    const $body = cheerio.load(response.body);
     const generator = $body('meta[name=generator]').attr('content');
 
     const ircMatches = patterns.irc.exec(response.body);
@@ -82,6 +82,11 @@ async function fetchChatLink(url) {
     if (rocketMatches) {
       return { type: CHAT['ROCKET'], url: response.request.href };
     }
+    
+    const discourseMatches = patterns.discourse.exec(generator);
+    if (discourseMatches) {
+      return { type: CHAT['DISCOURSE'], url: response.request.href };
+    }
 
     const webMatches = patterns.web.exec(response.request.href);
     if (webMatches) {
@@ -90,10 +95,6 @@ async function fetchChatLink(url) {
 
     if (pathname.indexOf('irc') > -1) {
       return { type: CHAT['IRC'], url: response.request.href };
-    }
-
-    if(patterns.discourse.exec(generator)) {
-      return { type: CHAT['DISCOURSE'], url: response.request.href };
     }
 
     return { type: CHAT['OTHER'], url: response.request.href };
