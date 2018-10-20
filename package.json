@@ -7,6 +7,7 @@
   "author": "Andrew Dassonville <dassonville.andrew@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "cheerio": "^1.0.0-rc.2",
     "request": "^2.83.0",
     "request-promise": "^4.2.2"
   }

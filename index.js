@@ -1,5 +1,6 @@
 const parse = require('url').parse;
 const rp = require('request-promise');
+const cheerio = require('cheerio');
 const CHAT = require('./resources/chat-types');
 
 async function chattie(url) {
@@ -45,7 +46,8 @@ async function fetchChatLink(url) {
     'ircweb': /(?:https?:\/\/)webchat\.freenode\.net\/\?channels=%23([a-zA-Z1-9-]+)/,
     'zulip': /(?:https?:\/\/)chat\.zulip\.org/,
     'rocket': /RocketChat/,
-    'web': /(?:https?:\/\/)(?:[a-zA-Z1-9]+)?\.?(gitter|zulip(?:chat)?)\.(?:[a-zA-Z1-9]{1,5})\/?([a-zA-Z1-9-]+)?/
+    'web': /(?:https?:\/\/)(?:[a-zA-Z1-9]+)?\.?(gitter|zulip(?:chat)?)\.(?:[a-zA-Z1-9]{1,5})\/?([a-zA-Z1-9-]+)?/,
+    'discourse': /Discourse\s\d\.\d.+?$/,
   };
 
   const parsedUrl = parse(url);
@@ -58,6 +60,8 @@ async function fetchChatLink(url) {
     };
 
     const response = await rp(options);
+    const $body = cheerio.load(response.body);
+    const generator = $body('meta[name=generator]').attr('content');
 
     const ircMatches = patterns.irc.exec(response.body);
     if (ircMatches) {
@@ -77,6 +81,11 @@ async function fetchChatLink(url) {
     const rocketMatches = patterns.rocket.exec(response.body);
     if (rocketMatches) {
       return { type: CHAT['ROCKET'], url: response.request.href };
+    }
+    
+    const discourseMatches = patterns.discourse.exec(generator);
+    if (discourseMatches) {
+      return { type: CHAT['DISCOURSE'], url: response.request.href };
     }
 
     const webMatches = patterns.web.exec(response.request.href);
