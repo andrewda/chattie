@@ -1,4 +1,4 @@
-const parse  = require('url').parse;
+const parse = require('url').parse;
 const rp = require('request-promise');
 const cheerio = require('cheerio');
 const CHAT = require('./resources/chat-types');
